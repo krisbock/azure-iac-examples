@@ -6,9 +6,9 @@ param pfxCertPassword string
 param appGwyHostName string
 param sshPublicKey string
 param vmssCustomScriptUri string
-param dnsResourceGroupName string = 'external-dns-zones-rg'
-param dnsZoneName string = 'kainiindustries.net'
-param dnsARecordName string = 'myapp'
+param dnsResourceGroupName string
+param dnsZoneName string
+param dnsARecordName string
 param forceUpdateTag int
 param storageAccountName string
 param domainNameLabel string = 'ddos-proxy'
@@ -154,7 +154,7 @@ module vmssCustomScriptExtensionMod './modules/scriptExtension.bicep' = {
   }
 }
 
-/* module dnsRecord './modules/dns.bicep' = {
+module dnsRecord './modules/dns.bicep' = {
   scope: resourceGroup(dnsResourceGroupName)
   name: 'dnsRecordDeployment'
   params: {
@@ -162,4 +162,4 @@ module vmssCustomScriptExtensionMod './modules/scriptExtension.bicep' = {
     recordName: dnsARecordName
     appGatewayIpAddress: appGwyMod.outputs.appGatewayFrontEndIpAddress
   }
-} */
+}

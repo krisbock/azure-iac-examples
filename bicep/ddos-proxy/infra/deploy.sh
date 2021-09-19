@@ -1,31 +1,23 @@
+#TODO
+# prompt for passwords
+# use KV + digicert
+
+
+
 rgName='ddos-proxy-rg'
 adminUsername='localadmin'
-adminPassword='M1cr0soft123'
-certPassword='M1cr0soft123'
+adminPassword='620e38a2-8c35-4055-a10a-8e48dd5b3e73'
 location='australiaeast'
 deploymentName='ddos-proxy-deployment'
-hostname='myapp.kainiindustries.net'
+hostname='akl1.fscale.nz'
 sshPublicKey=$(cat ~/.ssh/id_rsa.pub)
 vmssInstanceCount=3
-appGwyHostName='myapp.kainiindustries.net'
-aRecordName='myapp' 
-dnsZoneName='kainiindustries.net'
+appGwyHostName='akl1.fscale.nz'
+aRecordName='akl1' 
+dnsZoneName='fscale.nz'
 forceUpdateTag=$(date +%N)
-dnsResourceGroupName='external-dns-zones-rg'
+dnsResourceGroupName='ddos-proxy-rg'
 
-:'
-openssl ecparam -out root.key -name prime256v1 -genkey
-openssl req -new -sha256 -key root.key -out root.csr -subj "/C=AU/ST=NSW/L=Sydney/O=IT/CN=kainiindustries.net"
-openssl x509 -req -sha256 -days 365 -in root.csr -signkey root.key -out root.crt
-openssl ecparam -out client.key -name prime256v1 -genkey
-openssl req -new -sha256 -key client.key -out client.csr -subj "/C=AU/ST=NSW/L=Sydney/O=IT/CN=myapp.kainiindustries.net"
-openssl x509 -req -in client.csr -CA root.crt -CAkey root.key -CAcreateserial -out client.crt -days 365 -sha256 
-openssl x509 -in client.crt -text -noout
-openssl pkcs12 -export -out client.pfx -inkey client.key -in client.crt
-openssl base64 -in ./client.pfx -out ./clientbase64
-'
-
-cert=$(cat ../certs/clientbase64)
 
 az group create --name $rgName --location $location
 
@@ -49,8 +41,8 @@ az deployment group create \
     --template-file ./main.bicep \
     --parameters adminUsername=$adminUsername \
     --parameters adminPassword=$adminPassword \
-    --parameters pfxCert="$cert" \
-    --parameters pfxCertPassword=$certPassword \
+#    --parameters pfxCert="$cert" \
+#    --parameters pfxCertPassword=$certPassword \
     --parameters appGwyHostName=$hostName \
     --parameters vmssInstanceCount=$vmssInstanceCount \
     --parameters vmssCustomScriptUri=$CONTAINER_URI \
