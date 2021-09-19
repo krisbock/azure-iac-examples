@@ -1,0 +1,50 @@
+{
+    "issuerParameters": {
+        "certificateTransparency": null,
+        "certificateType": null,
+        "name": "Unknown"
+    },
+    "keyProperties": {
+        "curve": null,
+        "exportable": true,
+        "keySize": 2048,
+        "keyType": "RSA",
+        "reuseKey": false
+    },
+    "lifetimeActions": [
+        {
+            "action": {
+                "actionType": "EmailContacts"
+            },
+            "trigger": {
+                "daysBeforeExpiry": null,
+                "lifetimePercentage": 80
+            }
+        }
+    ],
+    "secretProperties": {
+        "contentType": "application/x-pkcs12"
+    },
+    "x509CertificateProperties": {
+        "basic_constraints": {
+            "ca": false
+        },
+        "ekus": [
+            "1.3.6.1.5.5.7.3.1",
+            "1.3.6.1.5.5.7.3.2"
+        ],
+        "keyUsage": [
+            "digitalSignature",
+            "keyEncipherment"
+        ],
+        "subject": "CN=${DNS_ZONE_NAME}",
+        "subjectAlternativeNames": {
+            "dnsNames": [
+                "${APPGW_HOST_NAME}"
+            ],
+            "emails": null,
+            "upns": null
+        },
+        "validityInMonths": 12
+    }
+}

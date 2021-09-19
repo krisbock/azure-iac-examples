@@ -3,8 +3,10 @@ param minCapacity int = 2
 param maxCapacity int = 10
 param frontendPort int = 443
 param backendPort int = 3000
-param pfxCert string
-param pfxCertPassword string
+//param pfxCert string
+//param pfxCertPassword string
+param userIdentityId string
+param sslCertKeyVaultSecretId string
 param probePath string = '/'
 param tags object
 param subnetId string
@@ -65,6 +67,12 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2020-06-01' =
   name: applicationGatewayName
   tags: tags
   location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userIdentityId}': {}
+    }
+  }
   properties: {
     sku: {
       name: gatewaySku
@@ -81,8 +89,9 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2020-06-01' =
       {
         name: certName
         properties: {
-          data: pfxCert
-          password: pfxCertPassword
+          //data: pfxCert
+          //password: pfxCertPassword
+          keyVaultSecretId: sslCertKeyVaultSecretId
         }
       }
     ]

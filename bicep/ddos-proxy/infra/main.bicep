@@ -1,8 +1,10 @@
 param adminUsername string
 param adminPassword string
 param vmssInstanceCount int
-param pfxCert string
-param pfxCertPassword string
+//param pfxCert string
+//param pfxCertPassword string
+param sslCertKeyVaultSecretId string
+param userIdentityId string
 param appGwyHostName string
 param sshPublicKey string
 param vmssCustomScriptUri string
@@ -67,7 +69,7 @@ module natGatewayMod './modules/natGateway.bicep' = {
   params: {
     natGatewayName: natGatewayName
     publicIpAddressName: natGatewayPublicIPAddressName
-    domainNameLabel: '${domainNameLabel}-natgw'
+    domainNameLabel: '${domainNameLabel}-natgw-${prefix}'
     tags: tags
   }
 }
@@ -95,8 +97,10 @@ module appGwyMod './modules/appGateway.bicep' = {
   params: {
     probePath: '/'
     gatewaySku: 'WAF_v2'
-    pfxCert: pfxCert
-    pfxCertPassword: pfxCertPassword
+    //pfxCert: pfxCert
+    //pfxCertPassword: pfxCertPassword
+    sslCertKeyVaultSecretId: sslCertKeyVaultSecretId
+    userIdentityId: userIdentityId
     frontEndHostName: appGwyHostName
     subnetId: vnetMod.outputs.subnetList[0].id
     tags: tags
@@ -116,7 +120,7 @@ module publicLoadBalancer 'modules/alb.bicep' = {
   name: 'vmssLoadBalancerDeployment'
   params: {
     backendPoolName: albBackendPoolName
-    domainNameLabel: '${domainNameLabel}-alb'
+    domainNameLabel: '${domainNameLabel}-alb-${prefix}'
     loadBalancerName: loadBalancerName
     tags: tags
     vnetResourceId: vnetMod.outputs.vnetResourceId
