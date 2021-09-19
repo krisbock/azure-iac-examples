@@ -1,16 +1,15 @@
 param appGatewayIpAddress string
-param dnsZoneName string = 'kainiindustries.net'
-param recordName string = 'myapp'
+param dnsZoneName string 
+param recordName string 
 
 resource dns 'Microsoft.Network/dnszones@2015-05-04-preview' existing = {
   name: dnsZoneName
 }
-
 resource arecord 'Microsoft.Network/dnsZones/A@2018-05-01' = {
   parent: dns
   name: recordName
   properties: {
-    TTL: 3600
+    TTL: 1800
     ARecords: [
       {
         ipv4Address: appGatewayIpAddress

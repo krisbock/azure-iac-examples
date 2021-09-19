@@ -3,8 +3,6 @@ param minCapacity int = 2
 param maxCapacity int = 10
 param frontendPort int = 443
 param backendPort int = 3000
-//param pfxCert string
-//param pfxCertPassword string
 param userIdentityId string
 param sslCertKeyVaultSecretId string
 param probePath string = '/'
@@ -89,8 +87,6 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2020-06-01' =
       {
         name: certName
         properties: {
-          //data: pfxCert
-          //password: pfxCertPassword
           keyVaultSecretId: sslCertKeyVaultSecretId
         }
       }

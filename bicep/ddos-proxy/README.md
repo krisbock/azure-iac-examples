@@ -16,3 +16,7 @@ This sample uses an Azure DNS Zone, but does not include automation for creating
 ```
 ddemo.fscale.nz
 ```
+
+## References
+
+<https://techblog.hobor.hu/2018/08/26/self-signed-certificate-with-sans-using-azure-cli-keyvault/>

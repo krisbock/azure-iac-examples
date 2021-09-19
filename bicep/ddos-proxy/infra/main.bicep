@@ -97,8 +97,6 @@ module appGwyMod './modules/appGateway.bicep' = {
   params: {
     probePath: '/'
     gatewaySku: 'WAF_v2'
-    //pfxCert: pfxCert
-    //pfxCertPassword: pfxCertPassword
     sslCertKeyVaultSecretId: sslCertKeyVaultSecretId
     userIdentityId: userIdentityId
     frontEndHostName: appGwyHostName
@@ -158,7 +156,7 @@ module vmssCustomScriptExtensionMod './modules/scriptExtension.bicep' = {
   }
 }
 
-module dnsRecord './modules/dns.bicep' = {
+module dnsRecord './modules/dnsA.bicep' = {
   scope: resourceGroup(dnsResourceGroupName)
   name: 'dnsRecordDeployment'
   params: {
