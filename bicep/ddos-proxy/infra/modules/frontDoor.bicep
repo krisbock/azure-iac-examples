@@ -1,24 +1,23 @@
+/*
+  Creates three endpoints (one default and two custom) with the following profile:
+  * HTTP permanently redirected to HTTPS
+  * Custom Frontend HTTPS requests forwarded to Custom Backend hostname
+  * Default Frontend HTTPS requests forwarded to customEndpoint1.backendHostname
+
+  ** Note that Default Frontend will be created automatically, you don't need to specify it. 
+*/
 param frontDoorName string
-param proxyApi object = {
-  name: 'proxyApi'
-  frontendHostname: null
-  backendHostname: null
+
+/*
+// custom endpoint object Type defined as:
+{
+  name: 'customEndpoint1'       // a symbolic name that is used for naming resources in Front Door
+  frontendHostname: null  // Fully qualified Frontend Hostname, e.g. 'api.contoso.com'
+  backendHostname: null   // Fully qualified Backend Hostname, e.g. 'apim.contoso.net'
 }
-param proxyWeb object = {
-  name: 'proxyWeb'
-  frontendHostname: null
-  backendHostname: null
-}
-param api object = {
-  name: 'api'
-  frontendHostname: null
-  backendHostname: null
-}
-param spa object = {
-  name: 'spa'
-  frontendHostname: null
-  backendHostname: null
-}
+*/
+param customEndpoint1 object 
+param customEndpoint2 object 
 
 var loadBalancingSettingsName = 'loadBalancingSettings'
 var healthProbeSettingsName = 'healthProbeSettings'
@@ -38,30 +37,16 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
         }
       }
       {
-        name: proxyApi.name
+        name: customEndpoint1.name
         properties: {
-          hostName: proxyApi.frontendHostname
+          hostName: customEndpoint1.frontendHostname
           sessionAffinityEnabledState: 'Disabled'
         }
       }
       {
-        name: proxyWeb.name
+        name: customEndpoint2.name
         properties: {
-          hostName: proxyWeb.frontendHostname
-          sessionAffinityEnabledState: 'Disabled'
-        }
-      }
-      {
-        name: api.name
-        properties: {
-          hostName: api.frontendHostname
-          sessionAffinityEnabledState: 'Disabled'
-        }
-      }
-      {
-        name: spa.name
-        properties: {
-          hostName: spa.frontendHostname
+          hostName: customEndpoint2.frontendHostname
           sessionAffinityEnabledState: 'Disabled'
         }
       }
@@ -87,12 +72,12 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
     ]
     backendPools: [
       {
-        name: proxyApi.name
+        name: customEndpoint1.name
         properties: {
           backends: [
             {
-              address: proxyApi.backendHostname
-              backendHostHeader: proxyApi.backendHostname
+              address: customEndpoint1.backendHostname
+              backendHostHeader: customEndpoint1.backendHostname
               httpsPort: 443
               httpPort: 80
               weight: 50
@@ -109,56 +94,12 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
         }
       }
       {
-        name: proxyWeb.name
+        name: customEndpoint2.name
         properties: {
           backends: [
             {
-              address: proxyWeb.backendHostname
-              backendHostHeader: proxyWeb.backendHostname
-              httpsPort: 443
-              httpPort: 80
-              weight: 50
-              priority: 1
-              enabledState: 'Enabled'
-            }
-          ]
-          loadBalancingSettings: {
-            id: resourceId('Microsoft.Network/frontDoors/loadBalancingSettings', frontDoorName, loadBalancingSettingsName)
-          }
-          healthProbeSettings: {
-            id: resourceId('Microsoft.Network/frontDoors/healthProbeSettings', frontDoorName, healthProbeSettingsName)
-          }
-        }
-      }
-      {
-        name: api.name
-        properties: {
-          backends: [
-            {
-              address: api.backendHostname
-              backendHostHeader: api.backendHostname
-              httpsPort: 443
-              httpPort: 80
-              weight: 50
-              priority: 1
-              enabledState: 'Enabled'
-            }
-          ]
-          loadBalancingSettings: {
-            id: resourceId('Microsoft.Network/frontDoors/loadBalancingSettings', frontDoorName, loadBalancingSettingsName)
-          }
-          healthProbeSettings: {
-            id: resourceId('Microsoft.Network/frontDoors/healthProbeSettings', frontDoorName, healthProbeSettingsName)
-          }
-        }
-      }
-      {
-        name: spa.name
-        properties: {
-          backends: [
-            {
-              address: spa.backendHostname
-              backendHostHeader: spa.backendHostname
+              address: customEndpoint2.backendHostname
+              backendHostHeader: customEndpoint2.backendHostname
               httpsPort: 443
               httpPort: 80
               weight: 50
@@ -194,7 +135,7 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
             '@odata.type': '#Microsoft.Azure.FrontDoor.Models.FrontdoorForwardingConfiguration'
             forwardingProtocol: 'HttpsOnly'
             backendPool: {
-              id: resourceId('Microsoft.Network/frontDoors/backEndPools', frontDoorName, spa.name)
+              id: resourceId('Microsoft.Network/frontDoors/backEndPools', frontDoorName, customEndpoint1.name)
             }
           }
           enabledState: 'Enabled'
@@ -223,11 +164,11 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
         }
       }
       {
-        name: proxyApi.name
+        name: customEndpoint1.name
         properties: {
           frontendEndpoints: [
             {
-              id: resourceId('Microsoft.Network/frontDoors/frontEndEndpoints', frontDoorName, proxyApi.name)
+              id: resourceId('Microsoft.Network/frontDoors/frontEndEndpoints', frontDoorName, customEndpoint1.name)
             }
           ]
           acceptedProtocols: [
@@ -240,18 +181,18 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
             '@odata.type': '#Microsoft.Azure.FrontDoor.Models.FrontdoorForwardingConfiguration'
             forwardingProtocol: 'HttpsOnly'
             backendPool: {
-              id: resourceId('Microsoft.Network/frontDoors/backEndPools', frontDoorName, proxyApi.name)
+              id: resourceId('Microsoft.Network/frontDoors/backEndPools', frontDoorName, customEndpoint1.name)
             }
           }
           enabledState: 'Enabled'
         }
       }
       {
-        name: '${proxyApi.name}-httpRedirect'
+        name: '${customEndpoint1.name}-httpRedirect'
         properties: {
           frontendEndpoints: [
             {
-              id: resourceId('Microsoft.Network/frontDoors/frontEndEndpoints', frontDoorName, proxyApi.name)
+              id: resourceId('Microsoft.Network/frontDoors/frontEndEndpoints', frontDoorName, customEndpoint1.name)
             }
           ]
           acceptedProtocols: [
@@ -269,11 +210,11 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
         }
       }
       {
-        name: proxyWeb.name
+        name: customEndpoint2.name
         properties: {
           frontendEndpoints: [
             {
-              id: resourceId('Microsoft.Network/frontDoors/frontEndEndpoints', frontDoorName, proxyWeb.name)
+              id: resourceId('Microsoft.Network/frontDoors/frontEndEndpoints', frontDoorName, customEndpoint2.name)
             }
           ]
           acceptedProtocols: [
@@ -286,110 +227,18 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
             '@odata.type': '#Microsoft.Azure.FrontDoor.Models.FrontdoorForwardingConfiguration'
             forwardingProtocol: 'HttpsOnly'
             backendPool: {
-              id: resourceId('Microsoft.Network/frontDoors/backEndPools', frontDoorName, proxyWeb.name)
+              id: resourceId('Microsoft.Network/frontDoors/backEndPools', frontDoorName, customEndpoint2.name)
             }
           }
           enabledState: 'Enabled'
         }
       }
       {
-        name: '${proxyWeb.name}-httpRedirect'
+        name: '${customEndpoint2.name}-httpRedirect'
         properties: {
           frontendEndpoints: [
             {
-              id: resourceId('Microsoft.Network/frontDoors/frontEndEndpoints', frontDoorName, proxyWeb.name)
-            }
-          ]
-          acceptedProtocols: [
-            'Http'
-          ]
-          patternsToMatch: [
-            '/*'
-          ]
-          routeConfiguration: {
-            '@odata.type': '#Microsoft.Azure.FrontDoor.Models.FrontdoorRedirectConfiguration'
-            redirectProtocol: 'HttpsOnly'
-            redirectType: 'PermanentRedirect'
-          }
-          enabledState: 'Enabled'
-        }
-      }
-      {
-        name: api.name
-        properties: {
-          frontendEndpoints: [
-            {
-              id: resourceId('Microsoft.Network/frontDoors/frontEndEndpoints', frontDoorName, api.name)
-            }
-          ]
-          acceptedProtocols: [
-            'Https'
-          ]
-          patternsToMatch: [
-            '/*'
-          ]
-          routeConfiguration: {
-            '@odata.type': '#Microsoft.Azure.FrontDoor.Models.FrontdoorForwardingConfiguration'
-            forwardingProtocol: 'HttpsOnly'
-            backendPool: {
-              id: resourceId('Microsoft.Network/frontDoors/backEndPools', frontDoorName, api.name)
-            }
-          }
-          enabledState: 'Enabled'
-        }
-      }
-      {
-        name: '${api.name}-httpRedirect'
-        properties: {
-          frontendEndpoints: [
-            {
-              id: resourceId('Microsoft.Network/frontDoors/frontEndEndpoints', frontDoorName, api.name)
-            }
-          ]
-          acceptedProtocols: [
-            'Http'
-          ]
-          patternsToMatch: [
-            '/*'
-          ]
-          routeConfiguration: {
-            '@odata.type': '#Microsoft.Azure.FrontDoor.Models.FrontdoorRedirectConfiguration'
-            redirectProtocol: 'HttpsOnly'
-            redirectType: 'PermanentRedirect'
-          }
-          enabledState: 'Enabled'
-        }
-      }
-      {
-        name: spa.name
-        properties: {
-          frontendEndpoints: [
-            {
-              id: resourceId('Microsoft.Network/frontDoors/frontEndEndpoints', frontDoorName, spa.name)
-            }
-          ]
-          acceptedProtocols: [
-            'Https'
-          ]
-          patternsToMatch: [
-            '/*'
-          ]
-          routeConfiguration: {
-            '@odata.type': '#Microsoft.Azure.FrontDoor.Models.FrontdoorForwardingConfiguration'
-            forwardingProtocol: 'HttpsOnly'
-            backendPool: {
-              id: resourceId('Microsoft.Network/frontDoors/backEndPools', frontDoorName, spa.name)
-            }
-          }
-          enabledState: 'Enabled'
-        }
-      }
-      {
-        name: '${spa.name}-httpRedirect'
-        properties: {
-          frontendEndpoints: [
-            {
-              id: resourceId('Microsoft.Network/frontDoors/frontEndEndpoints', frontDoorName, spa.name)
+              id: resourceId('Microsoft.Network/frontDoors/frontEndEndpoints', frontDoorName, customEndpoint2.name)
             }
           ]
           acceptedProtocols: [
@@ -409,26 +258,18 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
     ]
   }
 
-  resource proxyApiFrontend 'frontendEndpoints' existing = {
-    name: proxyApi.name
+  resource customEndpoint1Frontend 'frontendEndpoints' existing = {
+    name: customEndpoint1.name
   }
 
-  resource proxyWebFrontend 'frontendEndpoints' existing = {
-    name: proxyWeb.name
-  }
-
-  resource apiFrontend 'frontendEndpoints' existing = {
-    name: api.name
-  }
-
-  resource spaFrontend 'frontendEndpoints' existing = {
-    name: spa.name
+  resource customEndpoint2Frontend 'frontendEndpoints' existing = {
+    name: customEndpoint2.name
   }
 }
 
 // This resource enables a Front Door-managed TLS certificate on the frontend.
-resource proxyApiHttpsConfig 'Microsoft.Network/frontdoors/frontendEndpoints/customHttpsConfiguration@2020-07-01' = {
-  parent: frontDoor::proxyApiFrontend
+resource endpoint1HttpsConfig 'Microsoft.Network/frontdoors/frontendEndpoints/customHttpsConfiguration@2020-07-01' = {
+  parent: frontDoor::customEndpoint1Frontend
   name: 'default'
   properties: {
     protocolType: 'ServerNameIndication'
@@ -440,34 +281,8 @@ resource proxyApiHttpsConfig 'Microsoft.Network/frontdoors/frontendEndpoints/cus
   }
 }
 
-resource proxyWebHttpsConfig 'Microsoft.Network/frontdoors/frontendEndpoints/customHttpsConfiguration@2020-07-01' = {
-  parent: frontDoor::proxyWebFrontend
-  name: 'default'
-  properties: {
-    protocolType: 'ServerNameIndication'
-    certificateSource: 'FrontDoor'
-    frontDoorCertificateSourceParameters: {
-      certificateType: 'Dedicated'
-    }
-    minimumTlsVersion: '1.2'
-  }
-}
-
-resource apiHttpsConfig 'Microsoft.Network/frontdoors/frontendEndpoints/customHttpsConfiguration@2020-07-01' = {
-  parent: frontDoor::apiFrontend
-  name: 'default'
-  properties: {
-    protocolType: 'ServerNameIndication'
-    certificateSource: 'FrontDoor'
-    frontDoorCertificateSourceParameters: {
-      certificateType: 'Dedicated'
-    }
-    minimumTlsVersion: '1.2'
-  }
-}
-
-resource spaHttpsConfig 'Microsoft.Network/frontdoors/frontendEndpoints/customHttpsConfiguration@2020-07-01' = {
-  parent: frontDoor::spaFrontend
+resource endpoint2HttpsConfig 'Microsoft.Network/frontdoors/frontendEndpoints/customHttpsConfiguration@2020-07-01' = {
+  parent: frontDoor::customEndpoint2Frontend
   name: 'default'
   properties: {
     protocolType: 'ServerNameIndication'

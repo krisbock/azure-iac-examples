@@ -1,5 +1,11 @@
 # DDoS reverse internet proxy
 
+## TODO
+
+* Restrict App GW to Front Door
+* APIM
+* VPN GW
+
 ## Installation
 
 You will need
