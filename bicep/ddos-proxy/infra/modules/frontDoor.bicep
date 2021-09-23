@@ -22,6 +22,7 @@ param spa object = {
 
 var loadBalancingSettingsName = 'loadBalancingSettings'
 var healthProbeSettingsName = 'healthProbeSettings'
+var defaultFrontend = 'defaultFrontend'
 
 resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
   name: frontDoorName
@@ -29,6 +30,13 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
   properties: {
     enabledState: 'Enabled'
     frontendEndpoints: [
+      {
+        name: defaultFrontend
+        properties: {
+          hostName: '${frontDoorName}.azurefd.net'
+          sessionAffinityEnabledState: 'Disabled'
+        }
+      }
       {
         name: proxyApi.name
         properties: {
@@ -79,13 +87,14 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
     ]
     backendPools: [
       {
-        name: 'proxyApiBackend'
+        name: proxyApi.name
         properties: {
           backends: [
             {
               address: proxyApi.backendHostname
               backendHostHeader: proxyApi.backendHostname
               httpsPort: 443
+              httpPort: 80
               weight: 50
               priority: 1
               enabledState: 'Enabled'
@@ -100,13 +109,14 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
         }
       }
       {
-        name: 'proxyWebBackend'
+        name: proxyWeb.name
         properties: {
           backends: [
             {
               address: proxyWeb.backendHostname
               backendHostHeader: proxyWeb.backendHostname
               httpsPort: 443
+              httpPort: 80
               weight: 50
               priority: 1
               enabledState: 'Enabled'
@@ -121,13 +131,14 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
         }
       }
       {
-        name: 'apiBackend'
+        name: api.name
         properties: {
           backends: [
             {
               address: api.backendHostname
               backendHostHeader: api.backendHostname
               httpsPort: 443
+              httpPort: 80
               weight: 50
               priority: 1
               enabledState: 'Enabled'
@@ -142,13 +153,14 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
         }
       }
       {
-        name: 'spaBackend'
+        name: spa.name
         properties: {
           backends: [
             {
               address: spa.backendHostname
               backendHostHeader: spa.backendHostname
               httpsPort: 443
+              httpPort: 80
               weight: 50
               priority: 1
               enabledState: 'Enabled'
@@ -164,6 +176,52 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
       }
     ]
     routingRules: [
+      {
+        name: 'defaultRoutingRule'
+        properties: {
+          frontendEndpoints: [
+            {
+              id: resourceId('Microsoft.Network/frontDoors/frontEndEndpoints', frontDoorName, defaultFrontend)
+            }
+          ]
+          acceptedProtocols: [
+            'Https'
+          ]
+          patternsToMatch: [
+            '/*'
+          ]
+          routeConfiguration: {
+            '@odata.type': '#Microsoft.Azure.FrontDoor.Models.FrontdoorForwardingConfiguration'
+            forwardingProtocol: 'HttpsOnly'
+            backendPool: {
+              id: resourceId('Microsoft.Network/frontDoors/backEndPools', frontDoorName, spa.name)
+            }
+          }
+          enabledState: 'Enabled'
+        }
+      }
+      {
+        name: 'defaultRoutingRule-httpRedirect'
+        properties: {
+          frontendEndpoints: [
+            {
+              id: resourceId('Microsoft.Network/frontDoors/frontEndEndpoints', frontDoorName, defaultFrontend)
+            }
+          ]
+          acceptedProtocols: [
+            'Http'
+          ]
+          patternsToMatch: [
+            '/*'
+          ]
+          routeConfiguration: {
+            '@odata.type': '#Microsoft.Azure.FrontDoor.Models.FrontdoorRedirectConfiguration'
+            redirectProtocol: 'HttpsOnly'
+            redirectType: 'PermanentRedirect'
+          }
+          enabledState: 'Enabled'
+        }
+      }
       {
         name: proxyApi.name
         properties: {
@@ -349,6 +407,75 @@ resource frontDoor 'Microsoft.Network/frontDoors@2020-01-01' = {
         }
       }
     ]
+  }
+
+  resource proxyApiFrontend 'frontendEndpoints' existing = {
+    name: proxyApi.name
+  }
+
+  resource proxyWebFrontend 'frontendEndpoints' existing = {
+    name: proxyWeb.name
+  }
+
+  resource apiFrontend 'frontendEndpoints' existing = {
+    name: api.name
+  }
+
+  resource spaFrontend 'frontendEndpoints' existing = {
+    name: spa.name
+  }
+}
+
+// This resource enables a Front Door-managed TLS certificate on the frontend.
+resource proxyApiHttpsConfig 'Microsoft.Network/frontdoors/frontendEndpoints/customHttpsConfiguration@2020-07-01' = {
+  parent: frontDoor::proxyApiFrontend
+  name: 'default'
+  properties: {
+    protocolType: 'ServerNameIndication'
+    certificateSource: 'FrontDoor'
+    frontDoorCertificateSourceParameters: {
+      certificateType: 'Dedicated'
+    }
+    minimumTlsVersion: '1.2'
+  }
+}
+
+resource proxyWebHttpsConfig 'Microsoft.Network/frontdoors/frontendEndpoints/customHttpsConfiguration@2020-07-01' = {
+  parent: frontDoor::proxyWebFrontend
+  name: 'default'
+  properties: {
+    protocolType: 'ServerNameIndication'
+    certificateSource: 'FrontDoor'
+    frontDoorCertificateSourceParameters: {
+      certificateType: 'Dedicated'
+    }
+    minimumTlsVersion: '1.2'
+  }
+}
+
+resource apiHttpsConfig 'Microsoft.Network/frontdoors/frontendEndpoints/customHttpsConfiguration@2020-07-01' = {
+  parent: frontDoor::apiFrontend
+  name: 'default'
+  properties: {
+    protocolType: 'ServerNameIndication'
+    certificateSource: 'FrontDoor'
+    frontDoorCertificateSourceParameters: {
+      certificateType: 'Dedicated'
+    }
+    minimumTlsVersion: '1.2'
+  }
+}
+
+resource spaHttpsConfig 'Microsoft.Network/frontdoors/frontendEndpoints/customHttpsConfiguration@2020-07-01' = {
+  parent: frontDoor::spaFrontend
+  name: 'default'
+  properties: {
+    protocolType: 'ServerNameIndication'
+    certificateSource: 'FrontDoor'
+    frontDoorCertificateSourceParameters: {
+      certificateType: 'Dedicated'
+    }
+    minimumTlsVersion: '1.2'
   }
 }
 
