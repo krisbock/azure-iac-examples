@@ -3,6 +3,7 @@
   * HTTP permanently redirected to HTTPS
   * Custom Frontend HTTPS requests forwarded to Custom Backend hostname
   * Default Frontend HTTPS requests forwarded to customEndpoint1.backendHostname
+  * Front Door managed certificate enabled on both custom frontends
 
   ** Note that Default Frontend will be created automatically, you don't need to specify it. 
 */
