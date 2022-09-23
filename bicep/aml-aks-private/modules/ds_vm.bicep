@@ -20,12 +20,18 @@ param location string = resourceGroup().location
   'CPU-16GB'
   'GPU-56GB'
 ])
-param cpu_gpu string = 'CPU-4GB'
+param cpu_gpu string = 'CPU-16GB'
 
-param imageRef object = {
+/* param imageRef object = {
   publisher: 'microsoft-dsvm'
   offer: 'dsvm-win-2019'
   sku: 'server-2019'
+  version: 'latest'
+} */
+param imageRef object = {
+  publisher: 'MicrosoftWindowsDesktop'
+  offer: 'Windows-10'
+  sku: '21h1-ent'
   version: 'latest'
 }
 
@@ -48,11 +54,11 @@ var vmSize = {
   'CPU-7GB': 'Standard_D2s_v3'
   'CPU-8GB': 'Standard_D2s_v3'
   'CPU-14GB': 'Standard_D4s_v3'
-  'CPU-16GB': 'Standard_D4s_v3'
+  'CPU-16GB': 'Standard_E4s_v3'
   'GPU-56GB': 'Standard_NC6_Promo'
 }
 
-var linuxConfiguration = {
+/* var linuxConfiguration = {
   disablePasswordAuthentication: true
   ssh: {
     publicKeys: [
@@ -62,7 +68,7 @@ var linuxConfiguration = {
       }
     ]
   }
-}
+} */
 
 resource networkInterface 'Microsoft.Network/networkInterfaces@2020-05-01' = {
   name: networkInterfaceName
@@ -109,8 +115,13 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2019-07-01' = {
       computerName: vmName
       adminUsername: adminUsername
       adminPassword: adminPasswordOrKey
-      linuxConfiguration: ((authenticationType == 'password') ? json('null') : linuxConfiguration)
+      //linuxConfiguration: ((authenticationType == 'password') ? json('null') : linuxConfiguration)
+      windowsConfiguration: {
+        provisionVMAgent: true
+        enableAutomaticUpdates: true
+      }
     }
+    licenseType: 'Windows_Client'
   }
 }
 

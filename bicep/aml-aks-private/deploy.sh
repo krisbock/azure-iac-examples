@@ -1,5 +1,5 @@
 LOCATION='australiaeast'
-PREFIX='aml-secure'
+PREFIX='aml-winvm'
 DEPLOYMENT_NAME='infra-deployment'
 RG_NAME="${PREFIX}-rg"
 WS_CLUSTER_ATTACH_NAME='aks-inference'

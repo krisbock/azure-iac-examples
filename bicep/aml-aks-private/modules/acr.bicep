@@ -11,7 +11,8 @@ resource acr 'Microsoft.ContainerRegistry/registries@2020-11-01-preview' = {
     name: sku
   }
   properties: {
-    adminUserEnabled: true
+    adminUserEnabled: false
+    publicNetworkAccess: 'Disabled'
   }
 }
 
